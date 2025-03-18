@@ -20,11 +20,11 @@ class Restaurant(db.Model, SerializerMixin):
     name = db.Column(db.String)
     address = db.Column(db.String)
 
-    # add relationship
-    restaurant_pizzas = db.relationship("restaurant_pizzas", back_populates="pizza", cascade="all, delete-orphan")
+    # add relationship 
+    restaurant_pizzas = db.relationship("RestaurantPizza", back_populates="restaurant", cascade="all, delete-orphan")
     pizzas = association_proxy("restaurant_pizzas", "pizza")
     # add serialization rules
-    serialize_rules = ("-restaurantpizzas", "-pizzas")
+    serialize_rules = ("-restaurant_pizzas", "-pizzas")
     def __repr__(self):
         return f"<Restaurant {self.name}>"
 
@@ -39,13 +39,13 @@ class Pizza(db.Model, SerializerMixin):
     # add relationship
     #!establish bidirectional relationship with RP table + prevent parent deletion errors for orphans
     #*Resturant needs access to its related pizza objs through RP
-    restaurant_pizzas = db.relationship("restaurant_pizzas", back_populates="restaurant", cascade="all, delete-orphan")
+    restaurant_pizzas = db.relationship("RestaurantPizza", back_populates="pizza", cascade="all, delete-orphan")
     #!shortcut to access related Restaurant objects directly through the RestaurantPizza table
     restaurants = association_proxy("restaurant_pizzas", "resturant")
     # add serialization rules
     #!ALWAYS exclude relationships, circular reference
     #? could also just take off dot notation?
-    serealize_rules = ("-restaurantpizzas", "-resturants")
+    serealize_rules = ("-restaurant_pizzas", "-resturants")
     def __repr__(self):
         return f"<Pizza {self.name}, {self.ingredients}>"
 
@@ -58,8 +58,8 @@ class RestaurantPizza(db.Model, SerializerMixin):
     pizza_id = db.Column(db.Integer, db.ForeignKey("pizzas.id"))
     restaurant_id  = db.Column(db.Integer, db.ForeignKey("restaurants.id"))
     # add relationships
-    restaurant = db.relationship("Restaurant", back_populates = "RestaurantPizza")
-    pizza = db.relationship("Pizza", back_populates="RestaurantPizza")
+    restaurant = db.relationship("Restaurant", back_populates = "restaurant_pizzas")
+    pizza = db.relationship("Pizza", back_populates="restaurant_pizzas")
     # add serialization rules
     serialize_rules = ("-restaurant", "-pizza")
     # add validation
