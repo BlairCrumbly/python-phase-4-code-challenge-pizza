@@ -49,6 +49,11 @@ class RestaurantById(Resource):
             return make_response(restaurant.to_dict(rules=("restaurant_pizzas",)), 200)
         except Exception as e:
             return make_response({"error": "An internal error occurred"}, 500)
+        
+
+
+
+
 
     #! delete restaurant by ID
     def delete(self, id):
@@ -67,6 +72,60 @@ class RestaurantById(Resource):
             return make_response({"error": str(e)}, 500)
 
 api.add_resource(RestaurantById, "/restaurants/<int:id>")
+
+
+
+
+class MostExpensivePizzas(Resource):
+    def get(self):
+        try:
+            import ipdb;ipdb.set_trace()
+            most_expensive_pizzas = db.session.query(Pizza).join(RestaurantPizza).order_by(db.desc(RestaurantPizza.price)).limit(3).all()
+            return make_response(most_expensive_pizzas, 200)
+        except Exception as e:
+            return make_response({"error": str(e)}, 500)
+
+api.add_resource(MostExpensivePizzas, '/pizzas/most_expensive')
+
+class RestaurantSpecificPizza(Resource):
+    def get(self, pizza_id):
+        try:
+            rest_pizzas = Restaurant.query.join(RestaurantPizza).filter(RestaurantPizza.pizza_id == pizza_id).all()
+
+            result = [restaurant.to_dict() for restaurant in rest_pizzas]
+            return make_response(result, 200)
+        except Exception as e:
+            return make_response(
+                {"error": str(e)}, 500
+            )
+
+
+
+api.add_resource(RestaurantSpecificPizza, "/pizzas/<int:pizza_id>/restaurants")
+
+
+
+
+#todo Get All Pizzas Available at a Specific Restaurant Route: /restaurants/<int:id>/pizzas Return all pizzas offered at a given restaurant by its ID.
+class PizzasAtRestaurant(Resource):
+    def get(self, id):
+        try:
+            #! Query to get all pizzas for a specific restaurant by ID
+            pizzas = db.session.query(Pizza).join(RestaurantPizza).filter(RestaurantPizza.restaurant_id == id).all()
+            result = [pizza.to_dict() for pizza in pizzas]
+
+            return make_response(result, 200)
+
+        except Exception as e:
+            return make_response({"error": str(e)}, 500)
+
+api.add_resource(PizzasAtRestaurant, '/restaurants/<int:id>/pizzas')
+
+
+
+
+
+
 
 class Pizzas(Resource):
     def get(self):
